@@ -1,0 +1,15 @@
+# --- STAGE 1: Build Stage ---
+FROM node:18-alpine AS builder
+WORKDIR /app
+# Leverage Layer Caching: Copy package files first
+COPY package*.json ./
+RUN npm install
+# Copy the rest of the application code
+COPY . .
+RUN npm run build
+# --- STAGE 2: Production Stage ---
+FROM nginx:stable-alpine
+# Copy only the compiled static files from Stage 1
+COPY --from=builder /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
